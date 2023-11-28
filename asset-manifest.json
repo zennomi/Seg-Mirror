@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/Seg-Mirror/static/css/main.87497a0b.css",
-    "main.js": "/Seg-Mirror/static/js/main.5a8e1611.js",
+    "main.js": "/Seg-Mirror/static/js/main.9f2b8db1.js",
     "static/js/787.9864eaf1.chunk.js": "/Seg-Mirror/static/js/787.9864eaf1.chunk.js",
     "index.html": "/Seg-Mirror/index.html",
     "main.87497a0b.css.map": "/Seg-Mirror/static/css/main.87497a0b.css.map",
-    "main.5a8e1611.js.map": "/Seg-Mirror/static/js/main.5a8e1611.js.map",
+    "main.9f2b8db1.js.map": "/Seg-Mirror/static/js/main.9f2b8db1.js.map",
     "787.9864eaf1.chunk.js.map": "/Seg-Mirror/static/js/787.9864eaf1.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.87497a0b.css",
-    "static/js/main.5a8e1611.js"
+    "static/js/main.9f2b8db1.js"
   ]
 }
