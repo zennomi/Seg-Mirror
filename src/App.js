@@ -84,23 +84,31 @@ function App() {
     };
 
     return () => bc.onmessage = null
-  }, [bc, windowId, index, image,])
+  }, [bc, windowId, index, imageId, position])
 
   // detect window moved
   useEffect(() => {
     var oldX = window.screenX,
       oldY = window.screenY;
-
-    const interval = setInterval(function () {
-      if (oldX !== window.screenX || oldY !== window.screenY) {
-        updateNewPosition({ x: position.x - window.screenX + oldX, y: position.y - window.screenY + oldY })
+    function update() {
+      const deltaX = - window.screenX + oldX
+      const deltaY = - window.screenY + oldY
+      if (deltaX !== 0 || deltaY !== 0) {
+        setPosition((prevPosition) => {
+          const newPosition = ({ x: prevPosition.x + deltaX, y: prevPosition.y + deltaY })
+          console.log(prevPosition, newPosition);
+          return newPosition
+        })
       }
-      oldX = window.screenX;
-      oldY = window.screenY;
-    }, 1);
+      oldX -= deltaX;
+      oldY -= deltaY;
+      requestAnimationFrame(update);
+    }
 
-    return () => clearInterval(interval)
-  }, [position])
+    const interval = requestAnimationFrame(update);
+
+    return () => cancelAnimationFrame(interval)
+  }, [setPosition])
 
   // boarding case new_tab event
   useEffect(() => {
