@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, } from 'react';
 import Draggable from 'react-draggable';
 import images from './images';
 
@@ -10,6 +10,7 @@ function App() {
   const image1Url = images[imageId].censor // 
   const image2Url = images[imageId].uncensor
   const [index, setIndex] = useState(0) // 0: original window, 1: base image window, 2: uncensor image window
+  const [file, setFile] = useState(null)
 
   const bc = useMemo(() => new BroadcastChannel('biya'), []);
 
@@ -26,6 +27,12 @@ function App() {
       window.close()
     }
   }
+
+  const handleFileChange = (e) => {
+    if (e.target.files) {
+      setFile(e.target.files[0]);
+    }
+  };
 
   // update and emit new position
   const updateNewPosition = ({ x, y }) => {
@@ -117,7 +124,7 @@ function App() {
           <p class="w-1/3 text-center text-white">Đừng lóng, chờ 1 xíu là tải xong...</p>
         </div>
       }
-      <div className="App w-[100vw] h-[100vh] bg-gray-50 dark:bg-gray-800 pt-2">
+      <div className="App w-[100vw] h-[100vh] bg-gray-50 dark:bg-gray-800 pt-2  dark:text-white">
         <div className='container mx-auto text-center pt-2 px-1'>
 
           {
@@ -161,7 +168,7 @@ function App() {
                 </select>
               </div>
           }
-          <div>
+          <div className='flex flex-col gap-y-2'>
             <button
               className='text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800'
               onClick={handleOpenNewWindow}>{
@@ -169,6 +176,11 @@ function App() {
                   index === 1 ? "Mở gương thần" : "Đóng gương thần"
               }
             </button>
+            <div>Hoặc</div>
+            <input
+              class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" id="file_input" type="file"
+              onChange={handleFileChange}
+            ></input>
           </div>
         </div>
         {index !== 0
