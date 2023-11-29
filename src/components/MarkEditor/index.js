@@ -1,7 +1,7 @@
 import * as React from "react";
 
 export const MaskEditorDefaults = {
-    cursorSize: 10,
+    cursorSize: 50,
     maskOpacity: .75,
     maskColor: "#23272d",
     maskBlendMode: "normal",

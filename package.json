@@ -13,8 +13,7 @@
     "react-draggable": "^4.4.6",
     "react-mask-editor": "^0.0.2",
     "react-scripts": "5.0.1",
-    "web-vitals": "^2.1.4",
-    "ws": "^8.14.2"
+    "web-vitals": "^2.1.4"
   },
   "scripts": {
     "predeploy": "npm run build",
