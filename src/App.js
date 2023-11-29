@@ -1,16 +1,18 @@
 import { useEffect, useMemo, useState, } from 'react';
 import Draggable from 'react-draggable';
+import "react-mask-editor/dist/style.css"
+
 import images from './images';
+import UploadImage from './components/UploadImage';
 
 function App() {
   const windowId = useMemo(() => Math.random(), [])
   const [loading, setLoading] = useState(true) // load images effect
   const [position, setPosition] = useState({ x: window.innerWidth / 4, y: 0 }) // relative image's postion
-  const [imageId, setImageId] = useState(0) // image id in set
-  const image1Url = images[imageId].censor // 
-  const image2Url = images[imageId].uncensor
+  const [image, setImage] = useState(images[0])
+  const image1Url = image.censor // 
+  const image2Url = image.uncensor
   const [index, setIndex] = useState(0) // 0: original window, 1: base image window, 2: uncensor image window
-  const [file, setFile] = useState(null)
 
   const bc = useMemo(() => new BroadcastChannel('biya'), []);
 
@@ -28,11 +30,10 @@ function App() {
     }
   }
 
-  const handleFileChange = (e) => {
-    if (e.target.files) {
-      setFile(e.target.files[0]);
-    }
-  };
+  const handleSetImage = (img) => {
+    setImage(img)
+    handleOpenNewWindow()
+  }
 
   // update and emit new position
   const updateNewPosition = ({ x, y }) => {
@@ -44,10 +45,13 @@ function App() {
     bc.onmessage = (event) => {
       switch (event.data.type) {
         case 'new_tab':
-          if (index === 1) {
+          if (index === 0) {
+            bc.postMessage({ type: 'index_1', value: event.data.value, })
+            bc.postMessage({ type: 'image', value: image })
+          } else if (index === 1) {
             bc.postMessage({ type: 'index_2', value: event.data.value, })
             updateNewPosition(position)
-            bc.postMessage({ type: 'image_id', value: imageId })
+            bc.postMessage({ type: 'image', value: image })
           } else {
             bc.postMessage({ type: 'index_1', value: event.data.value, })
           }
@@ -55,7 +59,7 @@ function App() {
         case 'index_1':
           if (event.data.value === windowId) {
             setIndex(1)
-            document.title = images[imageId].title
+            document.title = image.title
           }
           break;
         case 'index_2':
@@ -70,8 +74,9 @@ function App() {
           const absoluteY = windowY + y
           setPosition({ x: absoluteX - window.screenX, y: absoluteY - window.screenY })
           break;
-        case 'image_id': // sync image id
-          setImageId(event.data.value)
+        case 'image': // sync image id
+          console.log(event.data.value)
+          setImage(event.data.value)
           break;
         default:
           break;
@@ -79,7 +84,7 @@ function App() {
     };
 
     return () => bc.onmessage = null
-  }, [bc, windowId, index, imageId,])
+  }, [bc, windowId, index, image,])
 
   // detect window moved
   useEffect(() => {
@@ -113,7 +118,7 @@ function App() {
         ))).then(() => {
           setLoading(false)
         });
-  }, [imageId])
+  }, [image])
 
   return (
     <>
@@ -124,7 +129,7 @@ function App() {
           <p class="w-1/3 text-center text-white">Đừng lóng, chờ 1 xíu là tải xong...</p>
         </div>
       }
-      <div className="App w-[100vw] h-[100vh] bg-gray-50 dark:bg-gray-800 pt-2  dark:text-white">
+      <div className="App min-w-[100vw] min-h-[100vh] bg-gray-50 dark:bg-gray-800 pt-2  dark:text-white">
         <div className='container mx-auto text-center pt-2 px-1'>
 
           {
@@ -155,13 +160,14 @@ function App() {
                 <select
                   id="images"
                   className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500'
-                  value={imageId}
+                  value={images.findIndex(img => img.censor === image) || -1}
                   onChange={(event) => {
                     console.log("Change Event!")
-                    setImageId(event.target.value)
-                    bc.postMessage({ type: 'image_id', value: event.target.value })
+                    setImage(images[event.target.value])
+                    bc.postMessage({ type: 'image', value: event.target.value })
                   }}
                 >
+                  <option value={index}>{image.title || "Ảnh tự đăng"}</option>
                   {
                     images.map((image, index) => <option value={index}>{image.title}</option>)
                   }
@@ -176,11 +182,12 @@ function App() {
                   index === 1 ? "Mở gương thần" : "Đóng gương thần"
               }
             </button>
-            <div>Hoặc</div>
-            <input
-              class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" id="file_input" type="file"
-              onChange={handleFileChange}
-            ></input>
+            {
+              index === 0 && <>
+                <div>Hoặc</div>
+                <UploadImage setImage={handleSetImage} />
+              </>
+            }
           </div>
         </div>
         {index !== 0
