@@ -4,8 +4,8 @@ import "react-mask-editor/dist/style.css"
 
 import images from './images';
 import UploadImage from './components/UploadImage';
-import sdData from './utils/sdData';
-import { blobToBase64 } from './utils/image';
+import { b64toBlobUrl, blobToBase64 } from './utils/image';
+import axios from 'axios';
 
 function App() {
   const windowId = useMemo(() => Math.random(), [])
@@ -77,7 +77,6 @@ function App() {
           setPosition({ x: absoluteX - window.screenX, y: absoluteY - window.screenY })
           break;
         case 'image': // sync image id
-          console.log(event.data.value)
           setImage(event.data.value)
           break;
         default:
@@ -98,7 +97,6 @@ function App() {
       if (deltaX !== 0 || deltaY !== 0) {
         setPosition((prevPosition) => {
           const newPosition = ({ x: prevPosition.x + deltaX, y: prevPosition.y + deltaY })
-          console.log(prevPosition, newPosition);
           return newPosition
         })
       }
@@ -130,49 +128,40 @@ function App() {
         });
   }, [image])
 
-  // websocket
+  // img2img api
   useEffect(() => {
-    if (index !== 2 || !image || !image.uncensor.startsWith("data:image/png;base64,")) return;
-
-    const ws = new WebSocket('ws://127.0.0.1:7860/queue/join');
-
-    ws.addEventListener('error', console.error);
-
-    ws.addEventListener('open', function open() {
-      console.log("Connected")
-    });
-
-    ws.addEventListener('message', async function (event) {
-      const fn_index = 341
-      const session_hash = "oemz019pdzq"
+    if (index !== 2 || !image || !image.uncensor.startsWith("data:")) return;
+    return;
+    (async function () {
       try {
-        const data = JSON.parse(event.data)
-        console.log(data)
-        switch (data.msg) {
-          case "send_hash":
-            ws.send(JSON.stringify({ fn_index, session_hash }))
-            break;
-          case "send_data":
-            sdData[7] = {
-              "image": await blobToBase64(image.censor),
-              "mask": image.uncensor,
-            }
-            ws.send(JSON.stringify({
-              data: sdData,
-              event_data: null,
-              fn_index,
-              session_hash
-            }))
-            break;
-          default:
-            break;
-        }
+        const { data } = await axios({
+          url: "http://localhost:7860/sdapi/v1/img2img",
+          method: "POST",
+          data: {
+            "prompt": "art of a nude woman, naked",
+            "negative_prompt": "​​((clothing), (monochrome:1.3), (deformed, distorted, disfigured:1.3), (hair), jeans, tattoo, wet, water, clothing, shadow, 3d render, cartoon, ((blurry)), duplicate, ((duplicate body parts)), (disfigured), (poorly drawn), ((missing limbs)), logo, signature, text, words, low res, boring, artifacts, bad art, gross, ugly, poor quality, low quality, poorly drawn, bad anatomy, wrong anatomy​, ((wrinkled)),",
+            "seed": -1,
+            "steps": 20,
+            "width": 512,
+            "height": 512,
+            "denoising_strength": 0.75,
+            "n_iter": 1,
+            "init_images": [await blobToBase64(image.censor),],
+            "mask": image.uncensor,
+            "batch_size": 1,
+            "sampler_index": "DPM++ SDE Karras",
+            "save_images": true,
+            "include_init_images": true,
+            "inpainting_mask_invert": 0, // Mask mode
+            "inpainting_fill": 0, // Masked content
+            "inpaint_full_res": 1, // Inpaint area
+          }
+        })
+        setImage(prevImage => ({ ...prevImage, uncensor: b64toBlobUrl(data.images[0]) }))
       } catch (error) {
         console.error(error)
       }
-    });
-
-    return () => ws.close()
+    })()
   }, [image])
 
   if (index === 0) return (
@@ -205,7 +194,6 @@ function App() {
             className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500'
             value={images.findIndex(img => img.censor === image) || -1}
             onChange={(event) => {
-              console.log("Change Event!")
               setImage(images[event.target.value])
               bc.postMessage({ type: 'image', value: event.target.value })
             }}
@@ -215,6 +203,9 @@ function App() {
               images.map((image, index) => <option value={index}>{image.title}</option>)
             }
           </select>
+          <button
+            className='text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800'
+            onClick={handleOpenNewWindow}>Mở ảnh có sẵn</button>
           <div className='block text-sm font-medium text-gray-900 dark:text-white'>Hoặc</div>
           <UploadImage setImage={handleSetImage} />
         </div>
@@ -232,7 +223,7 @@ function App() {
           <p class="w-1/3 text-center text-white">Đừng lóng, chờ 1 xíu là tải xong...</p>
         </div>
       }
-      <div className="w-[100vw] h-[100vh] bg-gray-50 dark:bg-gray-800 pt-2  dark:text-white">
+      <div className="w-[100vw] h-[100vh] bg-gray-50 dark:bg-gray-800 pt-2 dark:text-white overflow-hidden">
         <div className='container mx-auto text-center pt-2 px-1'>
           <div className='flex flex-col gap-y-2'>
             <button

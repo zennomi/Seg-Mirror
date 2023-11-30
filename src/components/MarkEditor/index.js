@@ -150,9 +150,9 @@ export const MaskEditor = (props) => {
 
     React.useEffect(() => replaceMaskColor(maskColor, false), [maskColor]);
 
-    return <div className="react-mask-editor-outer mx-auto max-w-[100vh]">
+    return <div className="react-mask-editor-outer mx-auto max-w-full max-h-[80vh]">
         <div
-            className="react-mask-editor-inner mx-auto max-w-[100vh]"
+            className="react-mask-editor-inner mx-auto max-w-full"
             style={{
                 width: size.x,
                 height: size.y,
