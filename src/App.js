@@ -131,7 +131,6 @@ function App() {
   // img2img api
   useEffect(() => {
     if (index !== 2 || !image || !image.uncensor.startsWith("data:")) return;
-    return;
     (async function () {
       try {
         const { data } = await axios({

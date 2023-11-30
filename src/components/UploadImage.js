@@ -37,7 +37,7 @@ const UploadImage = ({ setImage }) => {
                     <MaskEditor
                         src={URL.createObjectURL(file)}
                         canvasRef={canvas}
-                        maskColor="#000000"
+                        maskColor="#ffffff"
                         maskOpacity={0.8}
                     />
                     <button
